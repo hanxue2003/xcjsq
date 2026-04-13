@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>行测分数计算器 · 模块计分</title>
+  <!-- Font Awesome 图标 (简洁装饰) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, 'Segoe UI', 'Noto Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(145deg, #f4f7fb 0%, #e9eef4 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .calculator-card {
+      max-width: 900px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 40px;
+      box-shadow: 0 25px 40px -10px rgba(0, 20, 30, 0.15),
+                  0 6px 12px rgba(0, 0, 0, 0.03),
+                  inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+      padding: 2.2rem 2rem 2.5rem;
+      border: 1px solid rgba(160, 180, 200, 0.2);
+      transition: all 0.2s;
+    }
+
+    h1 {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 500;
+      font-size: 2.2rem;
+      letter-spacing: 1px;
+      color: #1e3b5c;
+      margin-bottom: 0.2rem;
+      border-bottom: 2px solid rgba(90, 130, 170, 0.2);
+      padding-bottom: 0.8rem;
+    }
+
+    h1 i {
+      color: #3a6d99;
+      font-size: 1.8rem;
+      background: #d9e6f2;
+      padding: 10px;
+      border-radius: 18px;
+    }
+
+    .subtitle {
+      color: #4a627a;
+      margin-bottom: 1.8rem;
+      font-size: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .score-summary {
+      background: #1e3b5c;
+      border-radius: 36px;
+      padding: 1.5rem 2rem;
+      margin-bottom: 2.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem 1.5rem;
+      box-shadow: 0 12px 18px -8px rgba(20, 50, 70, 0.2);
+      color: white;
+    }
+
+    .total-box {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .total-label {
+      font-size: 1.2rem;
+      font-weight: 400;
+      opacity: 0.85;
+      letter-spacing: 2px;
+    }
+
+    .total-score {
+      font-size: 4.5rem;
+      font-weight: 600;
+      line-height: 1;
+      font-feature-settings: "tnum";
+    }
+
+    .total-outof {
+      font-size: 1.4rem;
+      opacity: 0.8;
+      margin-left: 6px;
+      font-weight: 300;
+    }
+
+    .stats-right {
+      text-align: right;
+    }
+
+    .correct-count {
+      font-size: 1.5rem;
+      font-weight: 500;
+    }
+
+    .progress-badge {
+      background: rgba(255,255,240,0.15);
+      padding: 8px 18px;
+      border-radius: 40px;
+      font-size: 1rem;
+      backdrop-filter: blur(4px);
+    }
+
+    /* 模块表格区 */
+    .modules-header {
+      display: grid;
+      grid-template-columns: 2fr 1.2fr 1.2fr 1.2fr;
+      padding: 0.7rem 1rem;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #2c4b66;
+      border-bottom: 2px dashed #b8cfE3;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .module-row {
+      display: grid;
+      grid-template-columns: 2fr 1.2fr 1.2fr 1.2fr;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.5);
+      padding: 0.9rem 1rem;
+      margin-bottom: 8px;
+      border-radius: 28px;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      border: 1px solid rgba(180, 200, 220, 0.3);
+      transition: box-shadow 0.15s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+
+    .module-row:hover {
+      box-shadow: 0 6px 12px rgba(50, 80, 110, 0.08);
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .module-name {
+      font-weight: 550;
+      color: #1e3b5c;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .module-name i {
+      color: #527a9b;
+      width: 1.8rem;
+      text-align: center;
+      font-size: 1.2rem;
+    }
+
+    .total-hint {
+      font-size: 0.8rem;
+      margin-left: 8px;
+      color: #6b8aa8;
+      font-weight: 400;
+      background: #e2ebf3;
+      padding: 2px 10px;
+      border-radius: 30px;
+    }
+
+    .input-cell {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .input-cell input {
+      width: 90px;
+      padding: 10px 8px;
+      border: 1.5px solid #cfdee9;
+      border-radius: 24px;
+      font-size: 1rem;
+      text-align: center;
+      font-weight: 500;
+      background: white;
+      transition: all 0.2s;
+      color: #1a344c;
+      outline: none;
+      font-feature-settings: "tnum";
+    }
+
+    .input-cell input:focus {
+      border-color: #3a7ca5;
+      box-shadow: 0 0 0 4px rgba(58, 124, 165, 0.15);
+    }
+
+    .input-cell input[type="number"]::-webkit-outer-spin-button,
+    .input-cell input[type="number"]::-webkit-inner-spin-button {
+      opacity: 0.5;
+      height: 24px;
+    }
+
+    .input-suffix {
+      color: #5b7e9b;
+      font-size: 0.85rem;
+      margin-left: 2px;
+    }
+
+    .score-cell {
+      font-weight: 650;
+      color: #1e4d6b;
+      font-size: 1.25rem;
+      padding-left: 8px;
+      font-feature-settings: "tnum";
+    }
+
+    .action-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 2.2rem;
+      justify-content: center;
+    }
+
+    .btn {
+      background: white;
+      border: 1px solid #b8cee0;
+      padding: 12px 24px;
+      border-radius: 48px;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #1e3b5c;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      background: rgba(255,255,255,0.7);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.02);
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid rgba(120, 160, 190, 0.3);
+    }
+
+    .btn i {
+      color: #3a6d99;
+    }
+
+    .btn:hover {
+      background: #e4eef7;
+      border-color: #7fa1c2;
+      box-shadow: 0 8px 14px rgba(50, 90, 130, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .btn.primary {
+      background: #1e3b5c;
+      color: white;
+      border: none;
+      box-shadow: 0 8px 16px rgba(30, 59, 92, 0.25);
+    }
+
+    .btn.primary i {
+      color: #ffecb3;
+    }
+
+    .btn.primary:hover {
+      background: #264d73;
+    }
+
+    .footnote {
+      margin-top: 1.2rem;
+      text-align: center;
+      color: #6c8aa3;
+      font-size: 0.85rem;
+    }
+
+    /* 移动端优化 */
+    @media (max-width: 680px) {
+      body { padding: 0.8rem; }
+      .calculator-card { padding: 1.5rem 1.2rem; }
+      h1 { font-size: 1.8rem; }
+      .total-score { font-size: 3.2rem; }
+      .modules-header { display: none; }
+      .module-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 1.2rem 1.2rem;
+        margin-bottom: 15px;
+      }
+      .module-name {
+        justify-content: space-between;
+      }
+      .input-cell {
+        justify-content: space-between;
+      }
+      .input-cell input {
+        width: 120px;
+      }
+      .score-cell {
+        text-align: right;
+        font-size: 1.5rem;
+      }
+      .score-cell::before {
+        content: "得分: ";
+        font-weight: 400;
+        font-size: 1rem;
+        color: #5b7e9b;
+      }
+      .action-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .btn { justify-content: center; }
+    }
+
+    @media (max-width: 380px) {
+      .total-box { flex-direction: column; align-items: flex-start; gap: 2px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="calculator-card">
+  
+  <h1>
+    <i class="fas fa-calculator"></i> 
+    行测·计分器
+  </h1>
+  <div class="subtitle">
+    <span><i class="fas fa-pencil-alt" style="margin-right: 6px;"></i>输入各模块正确题数 · 分值可调</span>
+    <span style="font-size:0.9rem;"><i class="far fa-clock"></i> 实时计算</span>
+  </div>
+
+  <!-- 总分动态区域 -->
+  <div class="score-summary">
+    <div class="total-box">
+      <span class="total-label">总分</span>
+      <span class="total-score" id="totalScoreDisplay">0.00</span>
+      <span class="total-outof" id="fullScoreDisplay">/ 100.0</span>
+    </div>
+    <div class="stats-right">
+      <div class="correct-count" id="correctStats">0/130</div>
+      <div class="progress-badge" id="accuracyDisplay">正确率 0.0%</div>
+    </div>
+  </div>
+
+  <!-- 模块列表容器 (由js动态渲染，便于维护) -->
+  <div id="modulesContainer"></div>
+
+  <!-- 操作按钮组 -->
+  <div class="action-bar">
+    <button class="btn" id="resetCorrectBtn"><i class="fas fa-eraser"></i> 清零题数</button>
+    <button class="btn" id="resetScoreDefaultsBtn"><i class="fas fa-undo-alt"></i> 重置分值</button>
+    <button class="btn primary" id="fullResetBtn"><i class="fas fa-rotate-left"></i> 全部重置</button>
+  </div>
+  <div class="footnote">
+    <i class="far fa-lightbulb"></i> 每题分值可编辑 · 总分根据正确数×分值累加
+  </div>
+</div>
+
+<script>
+  (function(){
+    "use strict";
+
+    // ----- 模块配置 (行测常见模块，题量与默认分值可调) -----
+    const MODULE_CONFIG = [
+      { name: '言语理解与表达', total: 40, defaultScore: 0.8, icon: 'fa-book-open' },
+      { name: '数量关系', total: 10, defaultScore: 0.8, icon: 'fa-cubes' },
+      { name: '判断推理', total: 40, defaultScore: 0.7, icon: 'fa-puzzle-piece' },
+      { name: '资料分析', total: 20, defaultScore: 0.8, icon: 'fa-chart-bar' },
+      { name: '常识判断', total: 20, defaultScore: 0.7, icon: 'fa-globe' }
+    ];
+
+    // 引用DOM
+    const container = document.getElementById('modulesContainer');
+    const totalScoreSpan = document.getElementById('totalScoreDisplay');
+    const fullScoreSpan = document.getElementById('fullScoreDisplay');
+    const correctStatsSpan = document.getElementById('correctStats');
+    const accuracyDisplay = document.getElementById('accuracyDisplay');
+
+    // 存储所有动态生成的输入元素及对应数据，便于快速更新
+    const moduleRows = []; 
+    // 每个元素包含: { correctInput, scoreInput, scoreCell, totalQuestions, defaultScore }
+
+    // ----- 渲染模块表格 -----
+    function renderModules() {
+      if (!container) return;
+      let html = `
+        <div class="modules-header">
+          <div>模块</div>
+          <div>正确题数</div>
+          <div>每题分值</div>
+          <div>模块得分</div>
+        </div>
+      `;
+      
+      MODULE_CONFIG.forEach((mod, index) => {
+        html += `
+          <div class="module-row" data-module-index="${index}">
+            <div class="module-name">
+              <i class="fas ${mod.icon}"></i> ${mod.name}
+              <span class="total-hint">/${mod.total}题</span>
+            </div>
+            <div class="input-cell">
+              <input type="number" id="correct_${index}" class="correct-input" 
+                     value="0" min="0" max="${mod.total}" step="1" inputmode="numeric">
+              <span class="input-suffix">题</span>
+            </div>
+            <div class="input-cell">
+              <input type="number" id="scorePer_${index}" class="score-per-input" 
+                     value="${mod.defaultScore.toFixed(1)}" min="0" max="10" step="0.1">
+              <span class="input-suffix">分/题</span>
+            </div>
+            <div class="score-cell" id="moduleScore_${index}">0.00</div>
+          </div>
+        `;
+      });
+      
+      container.innerHTML = html;
+      
+      // 绑定元素并初始化 moduleRows 数组
+      moduleRows.length = 0;
+      MODULE_CONFIG.forEach((mod, idx) => {
+        const correctInput = document.getElementById(`correct_${idx}`);
+        const scorePerInput = document.getElementById(`scorePer_${idx}`);
+        const scoreCell = document.getElementById(`moduleScore_${idx}`);
+        
+        if (correctInput && scorePerInput && scoreCell) {
+          // 确保输入不超过总题量
+          const enforceMax = () => {
+            let val = parseInt(correctInput.value, 10);
+            if (isNaN(val) || val < 0) val = 0;
+            if (val > mod.total) val = mod.total;
+            correctInput.value = val;
+          };
+          correctInput.addEventListener('input', enforceMax);
+          correctInput.addEventListener('blur', enforceMax);
+          
+          // 分值最小值0
+          const enforceScoreMin = () => {
+            let val = parseFloat(scorePerInput.value);
+            if (isNaN(val) || val < 0) val = 0;
+            scorePerInput.value = val.toFixed(1);
+          };
+          scorePerInput.addEventListener('input', enforceScoreMin);
+          scorePerInput.addEventListener('blur', enforceScoreMin);
+          
+          // 存储行数据
+          moduleRows.push({
+            correctInput,
+            scorePerInput,
+            scoreCell,
+            total: mod.total,
+            defaultScore: mod.defaultScore
+          });
+          
+          // 绑定事件：任何输入变化都触发全更新
+          correctInput.addEventListener('input', updateAllScores);
+          scorePerInput.addEventListener('input', updateAllScores);
+        }
+      });
+      
+      // 初始计算一次
+      updateAllScores();
+    }
+
+    // ----- 计算各模块得分、总分、正确数、满分等，并更新UI -----
+    function updateAllScores() {
+      let totalScore = 0;
+      let totalCorrect = 0;
+      let totalQuestions = 0;
+      let fullScoreSum = 0;  // 满分 (总题量 × 当前分值)
+      
+      // 遍历每一行
+      moduleRows.forEach((row, idx) => {
+        const correct = parseInt(row.correctInput.value, 10) || 0;
+        const perScore = parseFloat(row.scorePerInput.value) || 0;
+        const maxQ = row.total;
+        
+        // 确保correct在合理范围 (再次确保)
+        const validCorrect = Math.min(Math.max(correct, 0), maxQ);
+        if (correct !== validCorrect) {
+          row.correctInput.value = validCorrect;
+        }
+        
+        const moduleScore = validCorrect * perScore;
+        // 更新模块得分显示 (保留两位小数)
+        row.scoreCell.textContent = moduleScore.toFixed(2);
+        
+        totalScore += moduleScore;
+        totalCorrect += validCorrect;
+        totalQuestions += maxQ;
+        fullScoreSum += maxQ * perScore;
+      });
+      
+      // 更新总分显示
+      totalScoreSpan.textContent = totalScore.toFixed(2);
+      fullScoreSpan.textContent = `/ ${fullScoreSum.toFixed(1)}`;
+      
+      // 正确数统计
+      correctStatsSpan.textContent = `${totalCorrect}/${totalQuestions}`;
+      
+      // 正确率
+      const accuracy = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
+      accuracyDisplay.textContent = `正确率 ${accuracy.toFixed(1)}%`;
+    }
+
+    // ----- 工具函数：重置所有正确数为0 -----
+    function resetCorrectToZero() {
+      moduleRows.forEach(row => {
+        row.correctInput.value = 0;
+      });
+      updateAllScores();
+    }
+
+    // ----- 重置每题分值为默认值 (保留正确数不变) -----
+    function resetScoresToDefault() {
+      moduleRows.forEach((row, idx) => {
+        const def = MODULE_CONFIG[idx].defaultScore;
+        row.scorePerInput.value = def.toFixed(1);
+      });
+      updateAllScores();
+    }
+
+    // ----- 全部重置：正确数归零 + 分值默认 -----
+    function fullReset() {
+      moduleRows.forEach((row, idx) => {
+        row.correctInput.value = 0;
+        row.scorePerInput.value = MODULE_CONFIG[idx].defaultScore.toFixed(1);
+      });
+      updateAllScores();
+    }
+
+    // ----- 绑定按钮事件 -----
+    function bindControls() {
+      const resetCorrectBtn = document.getElementById('resetCorrectBtn');
+      const resetScoreBtn = document.getElementById('resetScoreDefaultsBtn');
+      const fullResetBtn = document.getElementById('fullResetBtn');
+      
+      if (resetCorrectBtn) resetCorrectBtn.addEventListener('click', resetCorrectToZero);
+      if (resetScoreBtn) resetScoreBtn.addEventListener('click', resetScoresToDefault);
+      if (fullResetBtn) fullResetBtn.addEventListener('click', fullReset);
+    }
+
+    // 额外：处理手动输入时可能输入非法字符，但number输入已处理。
+    // 初始化渲染
+    renderModules();
+    bindControls();
+
+    // 保证在动态渲染后，若任何外部修改（已经绑定事件）
+    // 为了稳健，监听页面显示时的重新计算 (已做)
+    
+    // 可选：添加键盘支持，不用额外处理。
+  })();
+</script>
+</body>
+</html>
+```
